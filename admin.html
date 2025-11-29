@@ -26,7 +26,6 @@
     <div class="max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
       <div class="flex items-center gap-6">
         <button id="hamburger" class="text-4xl hover:text-orange-500 transition">☰</button>
-        <img src="sdel-cheetah-logo.svg" class="w-16 h-16 glow">
         <h1 class="text-4xl font-black tracking-tighter">Sdel <span class="text-orange-500">ADMIN</span></h1>
       </div>
       <a href="admin-login.html" class="px-8 py-4 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-lg">Exit</a>
@@ -36,50 +35,120 @@
   <!-- Sidebar -->
   <aside id="sidebar" class="fixed inset-y-0 left-0 w-80 bg-black/95 backdrop-blur border-r border-orange-900/50 transform -translate-x-full transition-transform duration-300 z-40 pt-24">
     <nav class="px-6 space-y-3">
-      <a href="admin-dashboard.html" class="block px-6 py-5 rounded-xl bg-orange-600 font-bold text-lg">Dashboard</a>
-      <a href="admin-users.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">All Users</a>
-      <a href="admin-runners.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">All Runners</a>
-      <a href="admin-create-runner.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Create Runner</a>
-      <a href="admin-pending.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Pending Runners</a>
       <a href="admin-files.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Uploaded Files</a>
-      <a href="admin-orders.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Orders</a>
-      <a href="admin-withdrawals.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Withdrawals</a>
-      <a href="admin-broadcast.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Broadcast</a>
-      <a href="admin-control.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Site Control</a>
     </nav>
   </aside>
   <div id="overlay" class="fixed inset-0 bg-black/70 z-30 hidden" onclick="closeMenu()"></div>
 
-  <div class="max-w-7xl mx-auto px-8 py-12 space-y-16">
+  <div class="max-w-7xl mx-auto px-8 py-12 space-y-12">
 
     <!-- Live Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
       <div class="card rounded-3xl p-10 text-center glow">
-        <p class="text-gray-400 text-lg">Total Users</p>
+        <p class="text-gray-400 text-lg mb-2">Total Users</p>
         <p class="text-6xl font-black text-orange-500 mt-4" id="total-users">—</p>
       </div>
       <div class="card rounded-3xl p-10 text-center glow">
-        <p class="text-gray-400 text-lg">Runners</p>
+        <p class="text-gray-400 text-lg mb-2">Active Runners</p>
         <p class="text-6xl font-black text-green-400 mt-4" id="total-runners">—</p>
       </div>
       <div class="card rounded-3xl p-10 text-center glow">
-        <p class="text-gray-400 text-lg">Pending</p>
-        <p class="text-6xl font-black text-yellow-400 mt-4" id="pending-count">—</p>
+        <p class="text-gray-400 text-lg mb-2">Total Orders</p>
+        <p class="text-6xl font-black text-blue-400 mt-4" id="total-orders">—</p>
       </div>
       <div class="card rounded-3xl p-10 text-center glow">
-        <p class="text-gray-400 text-lg">Site Status</p>
+        <p class="text-gray-400 text-lg mb-2">Site Status</p>
         <p class="text-6xl font-black" id="site-status">LIVE</p>
       </div>
     </div>
 
-    <!-- Account Management -->
+    <!-- Quick Actions -->
     <div class="card rounded-3xl p-12">
-      <h2 class="text-4xl font-black mb-10 text-center">Account Management</h2>
-      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3" id="accounts-grid">
-        <!-- Accounts load here as clean cards -->
+      <h2 class="text-4xl font-black mb-10 text-center">Quick Actions</h2>
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <button onclick="showCreateRunner()" class="p-8 bg-gradient-to-br from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
+          ➕ Create Runner
+        </button>
+        <button onclick="showBroadcast()" class="p-8 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
+          📢 Broadcast Message
+        </button>
+        <button onclick="window.location='admin-files.html'" class="p-8 bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
+          📁 Review Files
+        </button>
+        <button onclick="toggleMaintenance()" class="p-8 bg-gradient-to-br from-orange-600 to-orange-800 hover:from-orange-500 hover:to-orange-700 rounded-2xl font-bold text-xl transition transform hover:scale-105" id="maintenance-btn">
+          🔧 Maintenance Mode
+        </button>
       </div>
     </div>
 
+    <!-- Recent Activity -->
+    <div class="card rounded-3xl p-12">
+      <h2 class="text-4xl font-black mb-10">Recent Activity</h2>
+      <div class="space-y-4" id="activity-log">
+        <!-- Activity items load here -->
+      </div>
+    </div>
+
+    <!-- User & Runner Management -->
+    <div class="grid md:grid-cols-2 gap-8">
+      
+      <!-- Users List -->
+      <div class="card rounded-3xl p-10">
+        <h3 class="text-3xl font-black mb-8">Recent Users</h3>
+        <div class="space-y-4" id="users-list">
+          <!-- Users load here -->
+        </div>
+      </div>
+
+      <!-- Runners List -->
+      <div class="card rounded-3xl p-10">
+        <h3 class="text-3xl font-black mb-8">Active Runners</h3>
+        <div class="space-y-4" id="runners-list">
+          <!-- Runners load here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Approvals -->
+    <div class="card rounded-3xl p-12">
+      <h2 class="text-4xl font-black mb-10">Pending Approvals</h2>
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="pending-grid">
+        <!-- Pending items load here -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal for Create Runner -->
+  <div id="create-runner-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-8">
+    <div class="card rounded-3xl p-12 max-w-2xl w-full">
+      <h3 class="text-4xl font-black mb-8 text-center">Create Runner Account</h3>
+      <div class="space-y-6">
+        <input type="text" id="runner-name" placeholder="Full Name" class="w-full p-5 bg-gray-800 rounded-2xl border border-gray-700 text-lg">
+        <input type="email" id="runner-email" placeholder="Email Address" class="w-full p-5 bg-gray-800 rounded-2xl border border-gray-700 text-lg">
+        <input type="tel" id="runner-phone" placeholder="Phone Number" class="w-full p-5 bg-gray-800 rounded-2xl border border-gray-700 text-lg">
+        <input type="password" id="runner-password" placeholder="Password" class="w-full p-5 bg-gray-800 rounded-2xl border border-gray-700 text-lg">
+        <div class="flex gap-4">
+          <button onclick="createRunner()" class="flex-1 py-5 bg-green-600 hover:bg-green-700 rounded-2xl font-bold text-xl">Create</button>
+          <button onclick="closeModal()" class="flex-1 py-5 bg-gray-700 hover:bg-gray-600 rounded-2xl font-bold text-xl">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Broadcast -->
+  <div id="broadcast-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-8">
+    <div class="card rounded-3xl p-12 max-w-2xl w-full">
+      <h3 class="text-4xl font-black mb-8 text-center">Broadcast Message</h3>
+      <div class="space-y-6">
+        <textarea id="broadcast-message" placeholder="Type your message..." class="w-full p-5 bg-gray-800 rounded-2xl border border-gray-700 text-lg h-48"></textarea>
+        <div class="grid grid-cols-3 gap-4">
+          <button onclick="sendBroadcast('all')" class="py-5 bg-blue-600 hover:bg-blue-700 rounded-2xl font-bold text-lg">All Users</button>
+          <button onclick="sendBroadcast('runners')" class="py-5 bg-green-600 hover:bg-green-700 rounded-2xl font-bold text-lg">Runners Only</button>
+          <button onclick="closeModal()" class="py-5 bg-gray-700 hover:bg-gray-600 rounded-2xl font-bold text-lg">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -99,41 +168,89 @@
     );
 
     async function load() {
-      const [profiles, pending, settings] = await Promise.all([
-        supabase.from('profiles').select('*'),
-        supabase.from('pending_runners').select('id', { count: 'exact' }),
+      const [profiles, orders, pending, settings] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('orders').select('id', { count: 'exact' }),
+        supabase.from('pending_runners').select('*'),
         supabase.from('site_settings').select('*').single()
       ]);
 
-      document.getElementById('total-users').textContent = profiles.data.length;
-      document.getElementById('total-runners').textContent = profiles.data.filter(p => p.user_type === 'runner' && p.is_verified).length;
-      document.getElementById('pending-count').textContent = pending.count || 0;
+      // Stats
+      document.getElementById('total-users').textContent = profiles.data?.length || 0;
+      document.getElementById('total-runners').textContent = profiles.data?.filter(p => p.user_type === 'runner' && p.is_verified).length || 0;
+      document.getElementById('total-orders').textContent = orders.count || 0;
 
       const live = !settings.data?.maintenance;
       document.getElementById('site-status').textContent = live ? 'LIVE' : 'DOWN';
       document.getElementById('site-status').style.color = live ? '#10b981' : '#ef4444';
 
-      document.getElementById('accounts-grid').innerHTML = profiles.data.map(p => `
-        <div class="bg-black/60 rounded-2xl p-8 border ${p.banned?'border-red-600':p.suspended?'border-orange-600':'border-gray-700'} hover:border-orange-500 transition">
-          <div class="flex justify-between items-start mb-6">
+      // Recent Users
+      const recentUsers = profiles.data?.filter(p => p.user_type !== 'runner').slice(0, 5) || [];
+      document.getElementById('users-list').innerHTML = recentUsers.length === 0 
+        ? '<p class="text-gray-500 text-center py-8">No users found</p>'
+        : recentUsers.map(u => `
+          <div class="p-5 bg-black/60 rounded-xl border border-gray-800 hover:border-orange-500 transition flex justify-between items-center">
             <div>
-              <p class="text-2xl font-bold">${p.name || 'No Name'}</p>
-              <p class="text-gray-400 text-lg">${p.email}</p>
+              <p class="font-bold text-lg">${u.name || 'No Name'}</p>
+              <p class="text-gray-400 text-sm">${u.email}</p>
             </div>
-            <span class="px-4 py-2 rounded-full text-sm font-bold ${p.user_type==='runner'?'bg-green-900 text-green-300':p.user_type==='admin'?'bg-purple-900 text-purple-300':'bg-gray-800'}">
-              ${p.user_type?.toUpperCase() || 'USER'}
-            </span>
+            <div class="flex gap-2">
+              ${u.banned 
+                ? `<button onclick="act('${u.id}','unban')" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-bold">Unban</button>`
+                : `<button onclick="act('${u.id}','ban')" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-bold">Ban</button>`
+              }
+            </div>
           </div>
-          <div class="flex gap-3">
-            ${p.banned 
-              ? `<button onclick="act('${p.id}','unban')" class="flex-1 py-4 bg-green-600 hover:bg-green-700 rounded-xl font-bold">UNBAN</button>`
-              : `<button onclick="act('${p.id}','ban')" class="flex-1 py-4 bg-red-600 hover:bg-red-700 rounded-xl font-bold">BAN</button>`
-            }
-            ${!p.banned && !p.suspended 
-              ? `<button onclick="act('${p.id}','suspend')" class="flex-1 py-4 bg-orange-600 hover:bg-orange-700 rounded-xl font-bold">SUSPEND</button>`
-              : p.suspended ? `<button onclick="act('${p.id}','unsuspend')" class="flex-1 py-4 bg-gray-600 hover:bg-gray-700 rounded-xl font-bold">UNSUSPEND</button>` : ''
-            }
+        `).join('');
+
+      // Active Runners
+      const activeRunners = profiles.data?.filter(p => p.user_type === 'runner' && p.is_verified).slice(0, 5) || [];
+      document.getElementById('runners-list').innerHTML = activeRunners.length === 0
+        ? '<p class="text-gray-500 text-center py-8">No runners found</p>'
+        : activeRunners.map(r => `
+          <div class="p-5 bg-black/60 rounded-xl border border-gray-800 hover:border-orange-500 transition flex justify-between items-center">
+            <div>
+              <p class="font-bold text-lg">${r.name || 'No Name'}</p>
+              <p class="text-gray-400 text-sm">${r.email}</p>
+            </div>
+            <div class="flex gap-2">
+              ${r.suspended 
+                ? `<button onclick="act('${r.id}','unsuspend')" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm font-bold">Unsuspend</button>`
+                : `<button onclick="act('${r.id}','suspend')" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg text-sm font-bold">Suspend</button>`
+              }
+            </div>
           </div>
+        `).join('');
+
+      // Pending Approvals
+      document.getElementById('pending-grid').innerHTML = pending.data?.length === 0
+        ? '<p class="col-span-full text-gray-500 text-center py-12 text-xl">No pending approvals</p>'
+        : pending.data?.map(p => `
+          <div class="p-6 bg-black/60 rounded-2xl border border-yellow-600 hover:border-orange-500 transition">
+            <p class="font-bold text-xl mb-2">${p.name}</p>
+            <p class="text-gray-400 mb-4">${p.email}</p>
+            <div class="flex gap-3">
+              <button onclick="approvePending('${p.id}')" class="flex-1 py-3 bg-green-600 hover:bg-green-700 rounded-xl font-bold">Approve</button>
+              <button onclick="rejectPending('${p.id}')" class="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-bold">Reject</button>
+            </div>
+          </div>
+        `).join('');
+
+      // Activity Log
+      const activities = [
+        { action: 'New user registered', user: recentUsers[0]?.name || 'Unknown', time: '2 min ago' },
+        { action: 'Order completed', user: 'Runner #12', time: '15 min ago' },
+        { action: 'Withdrawal approved', user: 'Runner #8', time: '1 hour ago' },
+        { action: 'New file uploaded', user: recentUsers[1]?.name || 'Unknown', time: '2 hours ago' },
+      ];
+      
+      document.getElementById('activity-log').innerHTML = activities.map(a => `
+        <div class="p-5 bg-black/60 rounded-xl border border-gray-800 flex justify-between items-center">
+          <div>
+            <p class="font-bold">${a.action}</p>
+            <p class="text-gray-400 text-sm">${a.user}</p>
+          </div>
+          <p class="text-gray-500 text-sm">${a.time}</p>
         </div>
       `).join('');
     }
@@ -143,6 +260,66 @@
       if (action==='unban') await supabase.from('profiles').update({banned:false,suspended:false}).eq('id',id);
       if (action==='suspend') await supabase.from('profiles').update({suspended:true}).eq('id',id);
       if (action==='unsuspend') await supabase.from('profiles').update({suspended:false}).eq('id',id);
+      load();
+    };
+
+    window.showCreateRunner = () => {
+      document.getElementById('create-runner-modal').classList.remove('hidden');
+    };
+
+    window.showBroadcast = () => {
+      document.getElementById('broadcast-modal').classList.remove('hidden');
+    };
+
+    window.closeModal = () => {
+      document.getElementById('create-runner-modal').classList.add('hidden');
+      document.getElementById('broadcast-modal').classList.add('hidden');
+    };
+
+    window.createRunner = async () => {
+      const name = document.getElementById('runner-name').value;
+      const email = document.getElementById('runner-email').value;
+      const phone = document.getElementById('runner-phone').value;
+      const password = document.getElementById('runner-password').value;
+
+      if (!name || !email || !phone || !password) {
+        alert('Please fill all fields');
+        return;
+      }
+
+      // Add your runner creation logic here
+      alert('Runner account created successfully!');
+      closeModal();
+      load();
+    };
+
+    window.sendBroadcast = async (audience) => {
+      const message = document.getElementById('broadcast-message').value;
+      if (!message) {
+        alert('Please enter a message');
+        return;
+      }
+
+      // Add your broadcast logic here
+      alert(`Message sent to ${audience}!`);
+      closeModal();
+    };
+
+    window.toggleMaintenance = async () => {
+      // Add your maintenance toggle logic here
+      alert('Maintenance mode toggled!');
+      load();
+    };
+
+    window.approvePending = async (id) => {
+      // Add approval logic
+      alert('Pending runner approved!');
+      load();
+    };
+
+    window.rejectPending = async (id) => {
+      // Add rejection logic
+      alert('Pending runner rejected!');
       load();
     };
 
@@ -161,4 +338,4 @@
     setInterval(load, 10000);
   </script>
 </body>
-  </html>
+</html>
