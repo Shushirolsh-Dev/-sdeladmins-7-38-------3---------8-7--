@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sdel • Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background:#000; color:white; margin:0; overflow-x:hidden; }
+    .stars { position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; }
+    .star { position:absolute; background:white; border-radius:50%; animation:fall linear infinite; }
+    @keyframes fall { to { transform:translateY(100vh); } }
+    .card { background:rgba(20,20,20,0.9); backdrop-filter:blur(10px); border:1px solid #333; }
+    .glow { box-shadow:0 0 30px rgba(255,59,0,0.4); }
+  </style>
+</head>
+<body>
+
+  <div class="stars" id="stars"></div>
+
+  <!-- Header -->
+  <div class="border-b border-orange-900/50 bg-black/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
+      <div class="flex items-center gap-6">
+        <img src="sdel-cheetah-logo.svg" class="w-16 h-16 glow">
+        <h1 class="text-4xl font-black tracking-tighter">Sdel <span class="text-orange-500">ADMIN</span></h1>
+      </div>
+      <a href="admin-login.html" class="px-8 py-4 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-lg">Exit</a>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-8 py-12 space-y-16">
+
+    <!-- Live Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div class="card rounded-3xl p-10 text-center glow">
+        <p class="text-gray-400 text-lg">Total Users</p>
+        <p class="text-6xl font-black text-orange-500 mt-4" id="total-users">—</p>
+      </div>
+      <div class="card rounded-3xl p-10 text-center glow">
+        <p class="text-gray-400 text-lg">Runners</p>
+        <p class="text-6xl font-black text-green-400 mt-4" id="total-runners">—</p>
+      </div>
+      <div class="card rounded-3xl p-10 text-center glow">
+        <p class="text-gray-400 text-lg">Pending</p>
+        <p class="text-6xl font-black text-yellow-400 mt-4" id="pending-count">—</p>
+      </div>
+      <div class="card rounded-3xl p-10 text-center glow">
+        <p class="text-gray-400 text-lg">Site Status</p>
+        <p class="text-6xl font-black" id="site-status">LIVE</p>
+      </div>
+    </div>
+
+    <!-- Full Control Section -->
+    <div class="card rounded-3xl p-12">
+      <h2 class="text-4xl font-black mb-10 text-center">Full Account Control</h2>
+      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3" id="accounts-grid">
+        <!-- Accounts load here as clean cards -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      'https://crasacrormxxombnaklt.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyYXNhY3Jvcm14eG9tYm5ha2x0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNjg1NTAsImV4cCI6MjA3OTg0NDU1MH0.q_apkDBu_QVwebbfjRqZ7QwrsNm9xQysRoNhayNyfLU'
+    );
+
+    async function load() {
+      const [profiles, pending, settings] = await Promise.all([
+        supabase.from('profiles').select('*'),
+        supabase.from('pending_runners').select('id', { count: 'exact' }),
+        supabase.from('site_settings').select('*').single()
+      ]);
+
+      document.getElementById('total-users').textContent = profiles.data.length;
+      document.getElementById('total-runners').textContent = profiles.data.filter(p => p.user_type === 'runner' && p.is_verified).length;
+      document.getElementById('pending-count').textContent = pending.count || 0;
+
+      const live = !settings.data?.maintenance;
+      document.getElementById('site-status').textContent = live ? 'LIVE' : 'DOWN';
+      document.getElementById('site-status').style.color = live ? '#10b981' : '#ef4444';
+
+      document.getElementById('accounts-grid').innerHTML = profiles.data.map(p => `
+        <div class="bg-black/60 rounded-2xl p-8 border ${p.banned?'border-red-600':p.suspended?'border-orange-600':'border-gray-700'} hover:border-orange-500 transition">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <p class="text-2xl font-bold">${p.name || 'No Name'}</p>
+              <p class="text-gray-400 text-lg">${p.email}</p>
+            </div>
+            <span class="px-4 py-2 rounded-full text-sm font-bold ${p.user_type==='runner'?'bg-green-900 text-green-300':p.user_type==='admin'?'bg-purple-900 text-purple-300':'bg-gray-800'}">
+              ${p.user_type?.toUpperCase() || 'USER'}
+            </span>
+          </div>
+          <div class="flex gap-3">
+            ${p.banned 
+              ? `<button onclick="act('${p.id}','unban')" class="flex-1 py-4 bg-green-600 hover:bg-green-700 rounded-xl font-bold">UNBAN</button>`
+              : `<button onclick="act('${p.id}','ban')" class="flex-1 py-4 bg-red-600 hover:bg-red-700 rounded-xl font-bold">BAN</button>`
+            }
+            ${!p.banned && !p.suspended 
+              ? `<button onclick="act('${p.id}','suspend')" class="flex-1 py-4 bg-orange-600 hover:bg-orange-700 rounded-xl font-bold">SUSPEND</button>`
+              : p.suspended ? `<button onclick="act('${p.id}','unsuspend')" class="flex-1 py-4 bg-gray-600 hover:bg-gray-700 rounded-xl font-bold">UNSUSPEND</button>` : ''
+            }
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.act = async (id, action) => {
+      if (action==='ban') await supabase.from('profiles').update({banned:true,suspended:false}).eq('id',id);
+      if (action==='unban') await supabase.from('profiles').update({banned:false,suspended:false}).eq('id',id);
+      if (action==='suspend') await supabase.from('profiles').update({suspended:true}).eq('id',id);
+      if (action==='unsuspend') await supabase.from('profiles Prevalence').update({suspended:false}).eq('id',id);
+      load();
+    };
+
+    // Stars
+    for(let i=0; i<300; i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.width = s.style.height = (Math.random()*3+1)+'px';
+      s.style.left = Math.random()*100+'vw';
+      s.style.animationDuration = (Math.random()*50+30)+'s';
+      s.style.animationDelay = Math.random()*10+'s';
+      document.getElementById('stars').appendChild(s);
+    }
+
+    load();
+    setInterval(load, 10000);
+  </script>
+</body>
+</html>
