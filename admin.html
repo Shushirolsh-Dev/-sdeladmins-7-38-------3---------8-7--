@@ -26,19 +26,37 @@
     <div class="max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
       <div class="flex items-center gap-6">
         <button id="hamburger" class="text-4xl hover:text-orange-500 transition">☰</button>
-        <h1 class="text-4xl font-black tracking-tighter">Sdel <span class="text-orange-500">ADMIN</span></h1>
+        <h1 class="text-4xl font-black tracking-tighter"><span class="text-orange-500">ADMIN</span></h1>
       </div>
-      <a href="admin-login.html" class="px-8 py-4 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-lg">Exit</a>
+      <div class="flex items-center gap-6">
+        <!-- Notification Bell -->
+        <button onclick="openNotifications()" class="text-4xl hover:text-orange-500 transition relative">
+          🔔
+          <span id="notification-badge" class="absolute top-0 right-0 w-5 h-5 bg-red-600 rounded-full text-xs flex items-center justify-center font-bold hidden">3</span>
+        </button>
+        <!-- Logout -->
+        <button onclick="window.location='login.html'" class="text-4xl hover:text-red-500 transition" title="Logout">
+          ⏻
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- Sidebar -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 w-80 bg-black/95 backdrop-blur border-r border-orange-900/50 transform -translate-x-full transition-transform duration-300 z-40 pt-24">
+  <aside id="sidebar" class="fixed inset-y-0 left-0 w-80 bg-black/95 backdrop-blur border-r border-orange-900/50 transform -translate-x-full transition-transform duration-300 z-40 pt-32">
     <nav class="px-6 space-y-3">
       <a href="admin-files.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Uploaded Files</a>
     </nav>
   </aside>
   <div id="overlay" class="fixed inset-0 bg-black/70 z-30 hidden" onclick="closeMenu()"></div>
+
+  <!-- Notification Panel -->
+  <div id="notification-panel" class="fixed top-24 right-8 w-96 bg-black/95 backdrop-blur border border-orange-900/50 rounded-3xl p-6 transform translate-x-full transition-transform duration-300 z-40 max-h-[600px] overflow-y-auto hidden">
+    <h3 class="text-2xl font-black mb-6">Notifications</h3>
+    <div class="space-y-4" id="notifications-list">
+      <!-- Notifications load here -->
+    </div>
+  </div>
 
   <div class="max-w-7xl mx-auto px-8 py-12 space-y-12">
 
@@ -58,7 +76,12 @@
       </div>
       <div class="card rounded-3xl p-10 text-center glow">
         <p class="text-gray-400 text-lg mb-2">Site Status</p>
-        <p class="text-6xl font-black" id="site-status">LIVE</p>
+        <div class="mt-4 flex justify-center items-center">
+          <div id="site-status-indicator" class="w-20 h-20 rounded-full flex items-center justify-center">
+            <div id="site-status-dot" class="w-12 h-12 rounded-full animate-pulse"></div>
+          </div>
+        </div>
+        <p id="site-status-text" class="text-xl font-bold mt-2"></p>
       </div>
     </div>
 
@@ -162,6 +185,45 @@
       document.getElementById('overlay').classList.add('hidden');
     }
 
+    // Notification panel
+    window.openNotifications = () => {
+      const panel = document.getElementById('notification-panel');
+      panel.classList.toggle('hidden');
+      panel.classList.toggle('translate-x-full');
+      loadNotifications();
+    };
+
+    async function loadNotifications() {
+      // Sample notifications - replace with real data from your database
+      const notifications = [
+        { from: 'Super Admin', message: 'System maintenance scheduled for tonight', time: '2 min ago', read: false },
+        { from: 'User #123', message: 'New file uploaded for review', time: '15 min ago', read: false },
+        { from: 'Super Admin', message: 'Monthly report is ready', time: '1 hour ago', read: true },
+        { from: 'User #456', message: 'Withdrawal request submitted', time: '2 hours ago', read: true },
+      ];
+
+      const unreadCount = notifications.filter(n => !n.read).length;
+      const badge = document.getElementById('notification-badge');
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      document.getElementById('notifications-list').innerHTML = notifications.length === 0
+        ? '<p class="text-gray-500 text-center py-8">No notifications</p>'
+        : notifications.map(n => `
+          <div class="p-4 bg-black/60 rounded-xl border ${n.read ? 'border-gray-800' : 'border-orange-600'} hover:border-orange-500 transition">
+            <div class="flex justify-between items-start mb-2">
+              <p class="font-bold ${n.read ? 'text-gray-400' : 'text-white'}">${n.from}</p>
+              <p class="text-xs text-gray-500">${n.time}</p>
+            </div>
+            <p class="text-sm ${n.read ? 'text-gray-500' : 'text-gray-300'}">${n.message}</p>
+          </div>
+        `).join('');
+    }
+
     const supabase = window.supabase.createClient(
       'https://crasacrormxxombnaklt.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyYXNhY3Jvcm14eG9tYm5ha2x0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNjg1NTAsImV4cCI6MjA3OTg0NDU1MH0.q_apkDBu_QVwebbfjRqZ7QwrsNm9xQysRoNhayNyfLU'
@@ -180,9 +242,20 @@
       document.getElementById('total-runners').textContent = profiles.data?.filter(p => p.user_type === 'runner' && p.is_verified).length || 0;
       document.getElementById('total-orders').textContent = orders.count || 0;
 
+      // Site Status - Visual indicator
       const live = !settings.data?.maintenance;
-      document.getElementById('site-status').textContent = live ? 'LIVE' : 'DOWN';
-      document.getElementById('site-status').style.color = live ? '#10b981' : '#ef4444';
+      const statusDot = document.getElementById('site-status-dot');
+      const statusText = document.getElementById('site-status-text');
+      
+      if (live) {
+        statusDot.className = 'w-12 h-12 rounded-full animate-pulse bg-green-500';
+        statusText.textContent = 'LIVE';
+        statusText.className = 'text-xl font-bold mt-2 text-green-500';
+      } else {
+        statusDot.className = 'w-12 h-12 rounded-full animate-pulse bg-red-500';
+        statusText.textContent = 'MAINTENANCE';
+        statusText.className = 'text-xl font-bold mt-2 text-red-500';
+      }
 
       // Recent Users
       const recentUsers = profiles.data?.filter(p => p.user_type !== 'runner').slice(0, 5) || [];
@@ -253,6 +326,9 @@
           <p class="text-gray-500 text-sm">${a.time}</p>
         </div>
       `).join('');
+
+      // Load notifications on page load
+      loadNotifications();
     }
 
     window.act = async (id, action) => {
