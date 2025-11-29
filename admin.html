@@ -25,12 +25,30 @@
   <div class="border-b border-orange-900/50 bg-black/80 backdrop-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-8 py-6 flex justify-between items-center">
       <div class="flex items-center gap-6">
+        <button id="hamburger" class="text-4xl hover:text-orange-500 transition">☰</button>
         <img src="sdel-cheetah-logo.svg" class="w-16 h-16 glow">
         <h1 class="text-4xl font-black tracking-tighter">Sdel <span class="text-orange-500">ADMIN</span></h1>
       </div>
       <a href="admin-login.html" class="px-8 py-4 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-lg">Exit</a>
     </div>
   </div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 w-80 bg-black/95 backdrop-blur border-r border-orange-900/50 transform -translate-x-full transition-transform duration-300 z-40 pt-24">
+    <nav class="px-6 space-y-3">
+      <a href="admin-dashboard.html" class="block px-6 py-5 rounded-xl bg-orange-600 font-bold text-lg">Dashboard</a>
+      <a href="admin-users.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">All Users</a>
+      <a href="admin-runners.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">All Runners</a>
+      <a href="admin-create-runner.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Create Runner</a>
+      <a href="admin-pending.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Pending Runners</a>
+      <a href="admin-files.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Uploaded Files</a>
+      <a href="admin-orders.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Orders</a>
+      <a href="admin-withdrawals.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Withdrawals</a>
+      <a href="admin-broadcast.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Broadcast</a>
+      <a href="admin-control.html" class="block px-6 py-5 rounded-xl hover:bg-gray-900 font-bold text-lg border border-gray-800">Site Control</a>
+    </nav>
+  </aside>
+  <div id="overlay" class="fixed inset-0 bg-black/70 z-30 hidden" onclick="closeMenu()"></div>
 
   <div class="max-w-7xl mx-auto px-8 py-12 space-y-16">
 
@@ -54,9 +72,9 @@
       </div>
     </div>
 
-    <!-- Full Control Section -->
+    <!-- Account Management -->
     <div class="card rounded-3xl p-12">
-      <h2 class="text-4xl font-black mb-10 text-center">Full Account Control</h2>
+      <h2 class="text-4xl font-black mb-10 text-center">Account Management</h2>
       <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3" id="accounts-grid">
         <!-- Accounts load here as clean cards -->
       </div>
@@ -65,6 +83,16 @@
   </div>
 
   <script>
+    // Hamburger menu
+    document.getElementById('hamburger').onclick = () => {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+      document.getElementById('overlay').classList.toggle('hidden');
+    };
+    function closeMenu() {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('overlay').classList.add('hidden');
+    }
+
     const supabase = window.supabase.createClient(
       'https://crasacrormxxombnaklt.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyYXNhY3Jvcm14eG9tYm5ha2x0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNjg1NTAsImV4cCI6MjA3OTg0NDU1MH0.q_apkDBu_QVwebbfjRqZ7QwrsNm9xQysRoNhayNyfLU'
@@ -114,7 +142,7 @@
       if (action==='ban') await supabase.from('profiles').update({banned:true,suspended:false}).eq('id',id);
       if (action==='unban') await supabase.from('profiles').update({banned:false,suspended:false}).eq('id',id);
       if (action==='suspend') await supabase.from('profiles').update({suspended:true}).eq('id',id);
-      if (action==='unsuspend') await supabase.from('profiles Prevalence').update({suspended:false}).eq('id',id);
+      if (action==='unsuspend') await supabase.from('profiles').update({suspended:false}).eq('id',id);
       load();
     };
 
@@ -133,4 +161,4 @@
     setInterval(load, 10000);
   </script>
 </body>
-</html>
+  </html>
