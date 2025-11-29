@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sdel • God Mode</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background:#000; margin:0; overflow:hidden; }
+    .stars { position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; }
+    .star { position:absolute; background:#fff; border-radius:50%; animation:fall linear infinite; }
+    @keyframes fall { to { transform:translateY(100vh); } }
+    .glow { box-shadow: 0 0 60px rgba(255,59,0,0.6); }
+  </style>
+</head>
+<body>
+
+  <div class="stars" id="stars"></div>
+
+  <div class="min-h-screen flex items-center justify-center relative z-10 px-6">
+    <div class="text-center">
+      <!-- Cheetah Logo (use your SVG) -->
+      <img src="sdel-cheetah-logo.svg" alt="Sdel" class="w-48 h-48 mx-auto mb-10 glow">
+
+      <h1 class="text-6xl md:text-8xl font-black text-white mb-4 tracking-tighter">
+        SDEL <span class="text-orange-500">GOD MODE</span>
+      </h1>
+
+      <p class="text-xl md:text-2xl text-gray-400 mb-12">Owner Access Only</p>
+
+      <!-- One button. Click = instant access (no DB check for now) -->
+      <button onclick="location.href='admin.html'" 
+              class="px-20 py-7 text-3xl font-black rounded-2xl bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 transform hover:scale-105 transition-all glow">
+        ENTER GOD MODE
+      </button>
+
+      <p class="mt-10 text-gray-600 text-sm">You are the only one who knows this link.</p>
+    </div>
+  </div>
+
+  <script>
+    // Falling stars — same as main site
+    for(let i=0; i<300; i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.width = s.style.height = (Math.random()*3+1)+'px';
+      s.style.left = Math.random()*100+'vw';
+      s.style.animationDuration = (Math.random()*50+30)+'s';
+      s.style.animationDelay = Math.random()*10+'s';
+      document.getElementById('stars').appendChild(s);
+    }
+  </script>
+</body>
+</html>
