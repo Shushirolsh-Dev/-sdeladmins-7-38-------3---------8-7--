@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Broadcast – SDEL Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script>tailwind.config = { theme => ({ extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } })</script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { margin: 0; overflow-x: hidden; background: #000; }
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .star { position: absolute; background: white; border-radius: 50%; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+  </style>
+</head>
+<body class="min-h-screen bg-black text-white relative">
+
+  <div class="stars" id="stars"></div>
+
+  <!-- Header + Hamburger -->
+  <header class="fixed top-0 inset-x-0 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 z-50 flex items-center justify-between px-6 py-4">
+    <h1 class="text-2xl font-bold">SDEL Admin</h1>
+    <button id="hamburger" class="text-3xl focus:outline-none">☰</button>
+  </header>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-gray-900/95 backdrop-blur border-r border-gray-800 transform -translate-x-full transition z-40 pt-20">
+    <nav class="px-4 space-y-2">
+      <a href="index.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Dashboard</a>
+      <a href="users.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">All Users</a>
+      <a href="runners.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">All Runners</a>
+      <a href="orders.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Orders</a>
+      <a href="withdrawals.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Withdrawals</a>
+      <a href="broadcast.html" class="block px-6 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-white">Broadcast</a>
+      <a href="control.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Site Control</a>
+    </nav>
+  </aside>
+  <div id="overlay" class="fixed inset-0 bg-black/70 z-30 hidden" onclick="closeMenu()"></div>
+
+  <!-- Main Content -->
+  <main class="pt-24 px-6 pb-12 max-w-6xl mx-auto z-10 relative">
+    <h2 class="text-5xl font-black text-center mb-12 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+      Broadcast & Private Messages
+    </h2>
+
+    <div class="grid lg:grid-cols-2 gap-10">
+
+      <!-- Public Broadcast -->
+      <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-800 shadow-2xl">
+        <h3 class="text-3xl font-bold mb-8 text-center">Public Broadcast</h3>
+
+        <div class="mb-6">
+          <label class="block text-xl font-bold mb-4">Title</label>
+          <input type="text" id="title" placeholder="Enter a short title..." class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-purple-500 outline-none text-lg" />
+        </div>
+
+        <div class="mb-8">
+          <label class="block text-xl font-bold mb-4">Message</label>
+          <textarea id="message" rows="6" placeholder="Type your announcement here..." class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-purple-500 outline-none text-lg"></textarea>
+          <p class="text-sm text-gray-400 mt-3">Characters: <span id="charCount">0</span>/1000</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <button id="btn-general" class="py-6 bg-gradient-to-r from-orange-600 to-red-600 rounded-2xl font-bold text-xl hover:scale-105 transition transform">
+            General Update<br><span class="text-sm font-normal opacity-90">Visible to all users</span>
+          </button>
+          <button id="btn-team" class="py-6 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl font-bold text-xl hover:scale-105 transition transform">
+            Team Message<br><span class="text-sm font-normal opacity-90">Visible to admins & runners</span>
+          </button>
+        </div>
+
+        <div>
+          <p class="text-lg font-bold mb-4">Recent Broadcasts</p>
+          <div id="history" class="space-y-3 text-sm text-gray-400 max-h-96 overflow-y-auto">
+            <p class="italic">Loading...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Private Message to User -->
+      <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-800 shadow-2xl">
+        <h3 class="text-3xl font-bold mb-8 text-center">Private Message</h3>
+
+        <div class="mb-6">
+          <label class="block text-xl font-bold mb-4">User Email</label>
+          <input type="email" id="private-user-email" placeholder="Enter user email..." class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-purple-500 outline-none text-lg" />
+        </div>
+
+        <div class="mb-6">
+          <label class="block text-xl font-bold mb-4">Message Title</label>
+          <input type="text" id="private-title" placeholder="e.g. Warning: Illegal Upload Detected" class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-purple-500 outline-none text-lg" />
+        </div>
+
+        <div class="mb-8">
+          <label class="block text-xl font-bold mb-4">Message</label>
+          <textarea id="private-message" rows="6" placeholder="Type your private message..." class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-purple-500 outline-none text-lg"></textarea>
+          <div class="mt-4 space-y-2">
+            <p class="text-sm text-gray-400">Quick templates:</p>
+            <div class="flex flex-wrap gap-3">
+              <button type="button" onclick="useTemplate('illegal')" class="px-4 py-2 bg-red-600/50 rounded-lg text-sm hover:bg-red-600/70 transition">
+                Illegal Upload Warning
+              </button>
+              <button type="button" onclick="useTemplate('suspicious')" class="px-4 py-2 bg-yellow-600/50 rounded-lg text-sm hover:bg-yellow-600/70 transition">
+                Suspicious Activity
+              </button>
+              <button type="button" onclick="useTemplate('ban')" class="px-4 py-2 bg-red-800/50 rounded-lg text-sm hover:bg-red-800/70 transition">
+                Account Banned
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-private" class="w-full py-6 bg-gradient-to-r from-red-600 to-pink-600 rounded-2xl font-bold text-xl hover:scale-105 transition transform">
+          Send Private Message
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+    const supabaseUrl = 'https://lfjvnyeirxdvwxvzyocc.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmanZueWVpcnhkdnd4dnp5b2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NTI3MTUsImV4cCI6MjA4MDUyODcxNX0.JPekpIORM0jkTlfhjcCrwczf7wzkIT7csClSYJZyd5A';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const SUPER_ADMIN_UUID = '95bd3e62-87ba-49e3-a19a-b06fb4101e7b';
+
+    // Hamburger menu
+    document.getElementById('hamburger').onclick = () => {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+      document.getElementById('overlay').classList.toggle('hidden');
+    };
+    function closeMenu() {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('overlay').classList.add('hidden');
+    }
+
+    // Stars
+    const starsContainer = document.getElementById('stars');
+    setInterval(() => {
+      const star = document.createElement('div');
+      star.classList.add('star');
+      star.style.width = star.style.height = Math.random() * 4 + 'px';
+      star.style.left = Math.random() * 100 + 'vw';
+      star.style.animationDuration = Math.random() * 4 + 3 + 's';
+      starsContainer.appendChild(star);
+      setTimeout(() => star.remove(), 8000);
+    }, 200);
+
+    // Character counter
+    document.getElementById('message').addEventListener('input', e => {
+      document.getElementById('charCount').textContent = e.target.value.length;
+    });
+
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || user.id !== SUPER_ADMIN_UUID) {
+        alert('Access denied. Super admin only.');
+        window.location.href = 'login.html';
+      }
+    }
+
+    async function sendUpdate(type) {
+      const title = document.getElementById('title').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if (!title || !message) return alert('Title and message required.');
+
+      if (!confirm(`Send this ${type} update?`)) return;
+
+      const { error } = await supabase.from('updates').insert({ title, message, type });
+      if (error) alert('Error: ' + error.message);
+      else {
+        alert('Update sent!');
+        document.getElementById('title').value = '';
+        document.getElementById('message').value = '';
+        document.getElementById('charCount').textContent = '0';
+        loadRecentUpdates();
+      }
+    }
+
+    async function deleteUpdate(id) {
+      if (!confirm('Delete this update permanently?')) return;
+      const { error } = await supabase.from('updates').delete().eq('id', id);
+      if (error) alert('Delete failed: ' + error.message);
+      else loadRecentUpdates();
+    }
+
+    async function loadRecentUpdates() {
+      const { data, error } = await supabase
+        .from('updates')
+        .select('id, title, message, type, created_at')
+        .order('created_at', { ascending: false })
+        .limit(15);
+
+      const history = document.getElementById('history');
+      if (error || !data || data.length === 0) {
+        history.innerHTML = '<p class="italic">No updates yet</p>';
+        return;
+      }
+
+      history.innerHTML = data.map(u => `
+        <div class="bg-gray-800/50 rounded-xl p-4 flex justify-between items-start gap-4">
+          <div class="flex-1">
+            <div class="flex justify-between mb-2">
+              <strong class="capitalize">\( {u.type}: \){u.title}</strong>
+              <span class="text-xs opacity-70">${new Date(u.created_at).toLocaleString()}</span>
+            </div>
+            <p class="text-gray-300 text-sm">${u.message.replace(/\n/g, '<br>')}</p>
+          </div>
+          <button onclick="deleteUpdate('${u.id}')" class="text-red-500 hover:text-red-400 p-2">
+            <i data-lucide="trash-2" width="20" height="20"></i>
+          </button>
+        </div>
+      `).join('');
+      lucide.createIcons();
+    }
+
+    // Private message
+    async function sendPrivateMessage() {
+      const email = document.getElementById('private-user-email').value.trim();
+      const title = document.getElementById('private-title').value.trim();
+      const message = document.getElementById('private-message').value.trim();
+
+      if (!email || !title || !message) return alert('All private message fields are required.');
+
+      // Find user by email
+      const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+      const targetUser = userData?.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+      if (userError || !targetUser) return alert('User not found with that email.');
+
+      // Insert as private update (type: private, target_user_id)
+      const { error } = await supabase.from('updates').insert({
+        title,
+        message,
+        type: 'private',
+        target_user_id: targetUser.id
+      });
+
+      if (error) alert('Error sending private message: ' + error.message);
+      else {
+        alert('Private message sent successfully!');
+        document.getElementById('private-user-email').value = '';
+        document.getElementById('private-title').value = '';
+        document.getElementById('private-message').value = '';
+      }
+    }
+
+    function useTemplate(temp) {
+      if (temp === 'illegal') {
+        document.getElementById('private-title').value = 'Warning: Illegal Upload Detected';
+        document.getElementById('private-message').value = `Dear user,
+
+We have detected an upload that violates our community guidelines (illegal/prohibited items).
+
+Your account is at risk of suspension or permanent ban if this continues.
+
+Please review our rules and only upload legitimate delivery requests.
+
+This is your official warning.
+
+- SDEL Admin Team`;
+      } else if (temp === 'suspicious') {
+        document.getElementById('private-title').value = 'Suspicious Activity Notice';
+        document.getElementById('private-message').value = `Hello,
+
+We noticed unusual activity on your account.
+
+Please ensure all requests comply with our terms.
+
+Continued violations may lead to restrictions.
+
+Thank you for your cooperation.
+
+- SDEL Admin`;
+      } else if (temp === 'ban') {
+        document.getElementById('private-title').value = 'Account Banned';
+        document.getElementById('private-message').value = `Your account has been permanently banned for repeated violations of our guidelines.
+
+You can no longer use SDEL services.
+
+If you believe this is a mistake, contact support.
+
+- SDEL Admin Team`;
+      }
+    }
+
+    // Buttons
+    document.getElementById('btn-general').onclick = () => sendUpdate('general');
+    document.getElementById('btn-team').onclick = () => sendUpdate('team');
+    document.getElementById('btn-private').onclick = sendPrivateMessage;
+
+    // Init
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checkAuth();
+      loadRecentUpdates();
+    });
+  </script>
+</body>
+            </html>
