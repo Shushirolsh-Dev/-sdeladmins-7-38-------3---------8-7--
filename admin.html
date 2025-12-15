@@ -14,7 +14,8 @@
       .star { position:absolute; background:white; border-radius:50%; animation:fall linear infinite; }
       @keyframes fall { to { transform:translateY(100vh); } }
       .card { background:rgba(20,20,20,0.9); backdrop-filter:blur(10px); border:1px solid #333; }
-      .glow { box-shadow:0 0 30px rgba(255,59,0,0.4); }
+      .glow { box-shadow:0 0 30px rgba(255,59,0,0.4); cursor:pointer; }
+      .glow:hover { transform:scale(1.05); }
     </style>
 </head>
 <body>
@@ -62,77 +63,44 @@
 
     <!-- Live Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-      <div class="card rounded-3xl p-10 text-center glow">
+      <div onclick="window.location='users.html'" class="card rounded-3xl p-10 text-center glow transition transform hover:scale-105">
         <p class="text-gray-400 text-lg mb-2">Total Users</p>
-        <p class="text-6xl font-black text-orange-500 mt-4" id="total-users">—</p>
+        <p class="text-4xl font-black text-orange-500 mt-4" id="total-users">—</p>
       </div>
       <div class="card rounded-3xl p-10 text-center glow">
         <p class="text-gray-400 text-lg mb-2">Active Runners</p>
-        <p class="text-6xl font-black text-green-400 mt-4" id="total-runners">—</p>
+        <p class="text-4xl font-black text-green-400 mt-4" id="total-runners">—</p>
       </div>
       <div class="card rounded-3xl p-10 text-center glow">
         <p class="text-gray-400 text-lg mb-2">Total Orders</p>
-        <p class="text-6xl font-black text-blue-400 mt-4" id="total-orders">—</p>
+        <p class="text-4xl font-black text-blue-400 mt-4" id="total-orders">—</p>
       </div>
       <div class="card rounded-3xl p-10 text-center glow">
         <p class="text-gray-400 text-lg mb-2">Pending Uploads</p>
-        <p class="text-6xl font-black text-purple-400 mt-4" id="pending-uploads">—</p>
+        <p class="text-4xl font-black text-purple-400 mt-4" id="pending-uploads">—</p>
       </div>
     </div>
 
     <!-- Quick Actions -->
     <div class="card rounded-3xl p-12">
       <h2 class="text-4xl font-black mb-10 text-center">Quick Actions</h2>
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <button onclick="showCreateRunner()" class="p-8 bg-gradient-to-br from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <button onclick="window.location='create-account.html?type=runner'" class="p-8 bg-gradient-to-br from-green-600 to-green-800 hover:from-green-500 hover:to-green-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
           ➕ Create Runner
         </button>
-        <button onclick="showBroadcast()" class="p-8 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
+        <button onclick="window.location='broadcast.html'" class="p-8 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
           📢 Broadcast Message
         </button>
-        <button onclick="window.location='admin-files.html'" class="p-8 bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
-          📁 Review Files
+        <button onclick="window.location='uploads.html'" class="p-8 bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 rounded-2xl font-bold text-xl transition transform hover:scale-105">
+          📁 Review Files & Warn Users
         </button>
       </div>
     </div>
 
-    <!-- Recent Activity (placeholder) -->
-    <div class="card rounded-3xl p-12">
-      <h2 class="text-4xl font-black mb-10">Recent Activity</h2>
-      <div class="space-y-4" id="activity-log">
-        <p class="text-gray-500 text-center py-8">Activity log coming soon</p>
-      </div>
-    </div>
-
-    <!-- User & Runner Management (placeholder) -->
-    <div class="grid md:grid-cols-2 gap-8">
-      <div class="card rounded-3xl p-10">
-        <h3 class="text-3xl font-black mb-8">Recent Users</h3>
-        <div class="space-y-4" id="users-list">
-          <p class="text-gray-500 text-center py-8">Users list coming soon</p>
-        </div>
-      </div>
-
-      <div class="card rounded-3xl p-10">
-        <h3 class="text-3xl font-black mb-8">Active Runners</h3>
-        <div class="space-y-4" id="runners-list">
-          <p class="text-gray-500 text-center py-8">Runners list coming soon</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pending Approvals -->
-    <div class="card rounded-3xl p-12">
-      <h2 class="text-4xl font-black mb-10">Pending Approvals</h2>
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="pending-grid">
-        <p class="col-span-full text-gray-500 text-center py-12 text-xl">Loading pending uploads...</p>
-      </div>
-    </div>
+    <!-- Rest of dashboard (activity, users, runners, pending) - keep your original or placeholder -->
+    <!-- ... -->
 
   </div>
-
-  <!-- Modals remain the same (Create Runner, Broadcast) -->
-  <!-- (Omitted for brevity - copy from your original file) -->
 
   <script>
     // Hamburger menu
@@ -145,13 +113,13 @@
       document.getElementById('overlay').classList.add('hidden');
     }
 
-    // Notification bell click
+    // Notification bell
     document.getElementById('notification-bell').onclick = () => {
       const panel = document.getElementById('notification-panel');
       panel.classList.toggle('hidden');
       panel.classList.toggle('translate-x-full');
       loadNotifications();
-      clearNotificationCount();  // Clear badge when opened
+      clearNotificationCount();
     };
 
     const supabase = window.supabase.createClient(
@@ -161,28 +129,20 @@
 
     let lastSeenNotificationTime = localStorage.getItem('lastSeenNotification') ? new Date(localStorage.getItem('lastSeenNotification')) : new Date(0);
 
-    // Clear notification count and update last seen time
     function clearNotificationCount() {
       localStorage.setItem('lastSeenNotification', new Date().toISOString());
       const badge = document.getElementById('notification-badge');
       badge.classList.add('hidden');
-      badge.textContent = '0';
     }
 
-    // Load notifications from updates table (general + team)
     async function loadNotifications() {
-      const { data: notifications, error } = await supabase
+      const { data: notifications } = await supabase
         .from('updates')
         .select('title, message, type, created_at')
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error || !notifications || notifications.length === 0) {
-        document.getElementById('notifications-list').innerHTML = '<p class="text-gray-500 text-center py-8">No notifications</p>';
-        return;
-      }
-
-      const unreadCount = notifications.filter(n => new Date(n.created_at) > lastSeenNotificationTime).length;
+      const unreadCount = notifications?.filter(n => new Date(n.created_at) > lastSeenNotificationTime).length || 0;
 
       const badge = document.getElementById('notification-badge');
       if (unreadCount > 0) {
@@ -192,44 +152,38 @@
         badge.classList.add('hidden');
       }
 
-      document.getElementById('notifications-list').innerHTML = notifications.map(n => {
-        const timeAgo = new Date(n.created_at).toLocaleString();
+      document.getElementById('notifications-list').innerHTML = notifications?.length ? notifications.map(n => {
         const isUnread = new Date(n.created_at) > lastSeenNotificationTime;
         return `
-          <div class="p-4 bg-black/60 rounded-xl border ${isUnread ? 'border-orange-600' : 'border-gray-800'} hover:border-orange-500 transition">
-            <div class="flex justify-between items-start mb-2">
-              <p class="font-bold \( {isUnread ? 'text-white' : 'text-gray-400'} capitalize"> \){n.type} Update</p>
-              <p class="text-xs text-gray-500">${timeAgo}</p>
-            </div>
-            <p class="font-semibold \( {isUnread ? 'text-white' : 'text-gray-300'}"> \){n.title || 'Update'}</p>
-            <p class="text-sm \( {isUnread ? 'text-gray-300' : 'text-gray-500'} mt-1"> \){n.message}</p>
+          <div class="p-4 bg-black/60 rounded-xl border ${isUnread ? 'border-orange-600' : 'border-gray-800'}">
+            <p class="font-bold capitalize">${n.type} Update</p>
+            <p class="font-semibold">${n.title || 'Update'}</p>
+            <p class="text-sm text-gray-300 mt-1">${n.message}</p>
+            <p class="text-xs text-gray-500 mt-2">${new Date(n.created_at).toLocaleString()}</p>
           </div>
         `;
-      }).join('');
+      }).join('') : '<p class="text-gray-500 text-center py-8">No notifications</p>';
     }
 
-    // Real-time subscription for new updates
-    function subscribeToNotifications() {
-      supabase
-        .channel('updates-notifications')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'updates' }, () => {
-          loadNotifications();
-        })
-        .subscribe();
+    function formatNumber(num) {
+      if (num < 1000) return num.toString();
+      if (num < 100000) return (num / 1000).toFixed(1) + 'k';
+      if (num < 1000000) return Math.round(num / 1000) + 'k';
+      return (num / 1000000).toFixed(1) + 'm';
     }
 
     async function load() {
       const { data: usersData } = await supabase.from('Users').select('id');
-      document.getElementById('total-users').textContent = usersData ? usersData.length : 0;
-
-      const { count: ordersCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
-      document.getElementById('total-orders').textContent = ordersCount || 0;
+      document.getElementById('total-users').textContent = formatNumber(usersData?.length || 0);
 
       const { count: runnersCount } = await supabase.from('runners').select('*', { count: 'exact', head: true });
-      document.getElementById('total-runners').textContent = runnersCount || 0;
+      document.getElementById('total-runners').textContent = formatNumber(runnersCount || 0);
+
+      const { count: ordersCount } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+      document.getElementById('total-orders').textContent = formatNumber(ordersCount || 0);
 
       const { count: pendingCount } = await supabase.from('User_uploads').select('*', { count: 'exact', head: true }).eq('status', 'pending');
-      document.getElementById('pending-uploads').textContent = pendingCount || 0;
+      document.getElementById('pending-uploads').textContent = formatNumber(pendingCount || 0);
 
       loadNotifications();
     }
@@ -245,10 +199,9 @@
       document.getElementById('stars').appendChild(s);
     }
 
-    // Init
     load();
-    subscribeToNotifications();
-    setInterval(load, 15000); // Refresh stats every 15 seconds
+    setInterval(load, 15000);
+    supabase.channel('updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'updates' }, loadNotifications).subscribe();
   </script>
 </body>
-                                                                                    </html>
+</html>
