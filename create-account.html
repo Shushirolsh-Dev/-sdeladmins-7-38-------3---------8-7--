@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Runner – SDEL Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script>tailwind.config = { theme => ({ extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } })</script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { margin: 0; overflow-x: hidden; background: #000; }
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .star { position: absolute; background: white; border-radius: 50%; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+  </style>
+</head>
+<body class="min-h-screen bg-black text-white relative">
+
+  <div class="stars" id="stars"></div>
+
+  <!-- Header + Hamburger -->
+  <header class="fixed top-0 inset-x-0 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 z-50 flex items-center justify-between px-6 py-4">
+    <h1 class="text-2xl font-bold">SDEL Admin</h1>
+    <button id="hamburger" class="text-3xl focus:outline-none">☰</button>
+  </header>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-gray-900/95 backdrop-blur border-r border-gray-800 transform -translate-x-full transition z-40 pt-20">
+    <nav class="px-4 space-y-2">
+      <a href="index.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Dashboard</a>
+      <a href="users.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">All Users</a>
+      <a href="runners.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">All Runners</a>
+      <a href="orders.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Orders</a>
+      <a href="withdrawals.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Withdrawals</a>
+      <a href="broadcast.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Broadcast</a>
+      <a href="uploads.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Review Uploads</a>
+      <a href="create-runner.html" class="block px-6 py-4 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 font-bold text-white">Create Runner</a>
+      <a href="control.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Site Control</a>
+    </nav>
+  </aside>
+  <div id="overlay" class="fixed inset-0 bg-black/70 z-30 hidden" onclick="closeMenu()"></div>
+
+  <!-- Main Content -->
+  <main class="pt-24 px-6 pb-12 max-w-4xl mx-auto z-10 relative">
+    <h2 class="text-5xl font-black text-center mb-12 bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
+      Create New Runner Account
+    </h2>
+
+    <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-800 shadow-2xl">
+      <form id="create-runner-form" class="space-y-8">
+        <div>
+          <label class="block text-xl font-bold mb-4">Full Name</label>
+          <input type="text" id="runner-name" required placeholder="Enter runner's full name..." class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-green-500 outline-none text-lg" />
+        </div>
+
+        <div>
+          <label class="block text-xl font-bold mb-4">Email Address</label>
+          <input type="email" id="runner-email" required placeholder="runner@example.com" class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-green-500 outline-none text-lg" />
+        </div>
+
+        <div>
+          <label class="block text-xl font-bold mb-4">Phone Number (Optional)</label>
+          <input type="text" id="runner-phone" placeholder="+234..." class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-green-500 outline-none text-lg" />
+        </div>
+
+        <div>
+          <label class="block text-xl font-bold mb-4">Temporary Password</label>
+          <input type="text" id="runner-password" required value="runner123" class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 focus:border-green-500 outline-none text-lg" />
+          <p class="text-sm text-gray-400 mt-3">Runner will be prompted to change it on first login</p>
+        </div>
+
+        <button type="submit" class="w-full py-6 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl font-bold text-2xl hover:scale-105 transition transform">
+          Create Runner Account
+        </button>
+      </form>
+
+      <div id="message" class="mt-8 p-6 rounded-2xl text-center text-xl hidden"></div>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+    const supabaseUrl = 'https://lfjvnyeirxdvwxvzyocc.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmanZueWVpcnhkdnd4dnp5b2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NTI3MTUsImV4cCI6MjA4MDUyODcxNX0.JPekpIORM0jkTlfhjcCrwczf7wzkIT7csClSYJZyd5A';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const SUPER_ADMIN_UUID = '95bd3e62-87ba-49e3-a19a-b06fb4101e7b';
+
+    // Hamburger menu
+    document.getElementById('hamburger').onclick = () => {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+      document.getElementById('overlay').classList.toggle('hidden');
+    };
+    function closeMenu() {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('overlay').classList.add('hidden');
+    }
+
+    // Stars
+    const starsContainer = document.getElementById('stars');
+    setInterval(() => {
+      const star = document.createElement('div');
+      star.classList.add('star');
+      star.style.width = star.style.height = Math.random() * 4 + 'px';
+      star.style.left = Math.random() * 100 + 'vw';
+      star.style.animationDuration = Math.random() * 4 + 3 + 's';
+      starsContainer.appendChild(star);
+      setTimeout(() => star.remove(), 8000);
+    }, 200);
+
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      // RLS will block insert if not super admin
+    }
+
+    document.getElementById('create-runner-form').onsubmit = async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('runner-name').value.trim();
+      const email = document.getElementById('runner-email').value.trim().toLowerCase();
+      const phone = document.getElementById('runner-phone').value.trim();
+      const password = document.getElementById('runner-password').value;
+
+      const msg = document.getElementById('message');
+      msg.classList.add('hidden');
+
+      if (!name || !email || !password) {
+        msg.textContent = 'Name, email, and password are required.';
+        msg.className = 'mt-8 p-6 rounded-2xl bg-red-900/50 text-red-300';
+        msg.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        // Create user in Auth using signed-in admin
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            emailRedirectTo: window.location.origin + '/runner-login.html'  // Redirect after confirm
+          }
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error('User creation failed');
+
+        // Insert into runners table (RLS allows only super admin)
+        const { error: insertError } = await supabase
+          .from('runners')
+          .insert({
+            id: authData.user.id,
+            name: name,
+            phone: phone || null,
+            is_verified: true
+          });
+
+        if (insertError) {
+          // If insert fails (e.g., not super admin), delete the auth user
+          const { error: deleteError } = await supabase.auth.admin.deleteUser(authData.user.id);
+          throw insertError;
+        }
+
+        msg.textContent = 'Runner account created successfully! They will receive an email to confirm.';
+        msg.className = 'mt-8 p-6 rounded-2xl bg-green-900/50 text-green-300';
+        msg.classList.remove('hidden');
+
+        e.target.reset();
+        document.getElementById('runner-password').value = 'runner123';
+
+      } catch (err) {
+        console.error(err);
+        msg.textContent = 'Error: ' + (err.message || 'Failed to create runner (permission denied?)');
+        msg.className = 'mt-8 p-6 rounded-2xl bg-red-900/50 text-red-300';
+        msg.classList.remove('hidden');
+      }
+    };
+
+    // Init
+    document.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+</body>
+</html>
