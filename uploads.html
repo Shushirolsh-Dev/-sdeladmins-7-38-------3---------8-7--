@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review Uploads – SDEL Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script>tailwind.config = { theme => ({ extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } })</script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { margin: 0; overflow-x: hidden; background: #000; }
+    .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .star { position: absolute; background: white; border-radius: 50%; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+  </style>
+</head>
+<body class="min-h-screen bg-black text-white relative">
+
+  <div class="stars" id="stars"></div>
+
+  <!-- Header + Hamburger -->
+  <header class="fixed top-0 inset-x-0 bg-gray-900/90 backdrop-blur-md border-b border-gray-800 z-50 flex items-center justify-between px-6 py-4">
+    <h1 class="text-2xl font-bold">SDEL Admin</h1>
+    <button id="hamburger" class="text-3xl focus:outline-none">☰</button>
+  </header>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-gray-900/95 backdrop-blur border-r border-gray-800 transform -translate-x-full transition z-40 pt-20">
+    <nav class="px-4 space-y-2">
+      <a href="index.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Dashboard</a>
+      <a href="users.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">All Users</a>
+      <a href="runners.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">All Runners</a>
+      <a href="orders.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Orders</a>
+      <a href="withdrawals.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Withdrawals</a>
+      <a href="broadcast.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Broadcast</a>
+      <a href="uploads.html" class="block px-6 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-white">Review Uploads</a>
+      <a href="control.html" class="block px-6 py-4 rounded-xl hover:bg-gray-800 font-medium">Site Control</a>
+    </nav>
+  </aside>
+  <div id="overlay" class="fixed inset-0 bg-black/70 z-30 hidden" onclick="closeMenu()"></div>
+
+  <!-- Main Content -->
+  <main class="pt-24 px-6 pb-12 max-w-7xl mx-auto z-10 relative">
+    <h2 class="text-5xl font-black text-center mb-12 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+      Review User Uploads
+    </h2>
+
+    <div class="mb-8 text-center">
+      <button onclick="loadUploads()" class="px-8 py-4 bg-gradient-to-r from-orange-600 to-pink-600 rounded-2xl font-bold text-xl hover:scale-105 transition">
+        Refresh List
+      </button>
+    </div>
+
+    <div id="uploads-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <p class="col-span-full text-center text-gray-500 py-12 text-xl">Loading uploads...</p>
+    </div>
+
+    <div id="empty" class="text-center py-20 text-gray-500 hidden">
+      <p class="text-3xl font-bold mb-4">No pending uploads</p>
+      <p class="text-xl">All uploads have been reviewed</p>
+    </div>
+  </main>
+
+  <!-- Warning Modal -->
+  <div id="warning-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-8">
+    <div class="bg-gray-900/95 backdrop-blur-xl rounded-3xl p-8 max-w-2xl w-full border border-gray-800">
+      <h3 class="text-3xl font-bold mb-6 text-center text-red-500">Send Warning</h3>
+      <input type="hidden" id="warning-user-id">
+      <div class="mb-6">
+        <label class="block text-xl font-bold mb-4">Title</label>
+        <input type="text" id="warning-title" value="Warning: Inappropriate Upload" class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 text-lg" />
+      </div>
+      <div class="mb-8">
+        <label class="block text-xl font-bold mb-4">Message</label>
+        <textarea id="warning-message" rows="6" class="w-full p-6 bg-gray-800/70 rounded-2xl border border-gray-700 text-lg">Your recent upload has been rejected because it violates our guidelines.
+
+Please ensure all uploads are appropriate and follow our rules.
+
+Repeated violations may lead to account suspension.
+
+- SDEL Admin Team</textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-6">
+        <button onclick="sendWarning()" class="py-6 bg-red-600 rounded-2xl font-bold text-xl hover:scale-105 transition">
+          Send Warning
+        </button>
+        <button onclick="closeWarningModal()" class="py-6 bg-gray-700 rounded-2xl font-bold text-xl hover:scale-105 transition">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+    const supabaseUrl = 'https://lfjvnyeirxdvwxvzyocc.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmanZueWVpcnhkdnd4dnp5b2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NTI3MTUsImV4cCI6MjA4MDUyODcxNX0.JPekpIORM0jkTlfhjcCrwczf7wzkIT7csClSYJZyd5A';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const SUPER_ADMIN_UUID = '95bd3e62-87ba-49e3-a19a-b06fb4101e7b';
+
+    // Hamburger menu
+    document.getElementById('hamburger').onclick = () => {
+      document.getElementById('sidebar').classList.toggle('-translate-x-full');
+      document.getElementById('overlay').classList.toggle('hidden');
+    };
+    function closeMenu() {
+      document.getElementById('sidebar').classList.add('-translate-x-full');
+      document.getElementById('overlay').classList.add('hidden');
+    }
+
+    // Stars
+    const starsContainer = document.getElementById('stars');
+    setInterval(() => {
+      const star = document.createElement('div');
+      star.classList.add('star');
+      star.style.width = star.style.height = Math.random() * 4 + 'px';
+      star.style.left = Math.random() * 100 + 'vw';
+      star.style.animationDuration = Math.random() * 4 + 3 + 's';
+      starsContainer.appendChild(star);
+      setTimeout(() => star.remove(), 8000);
+    }, 200);
+
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || user.id !== SUPER_ADMIN_UUID) {
+        alert('Access denied. Super admin only.');
+        window.location.href = 'login.html';
+      }
+    }
+
+    async function loadUploads() {
+      const { data: uploads, error } = await supabase
+        .from('User_uploads')
+        .select('id, image_url, description, budget, total_amount, delivery_type, is_ghost, created_at, user_id, status')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      const grid = document.getElementById('uploads-grid');
+      if (error || !uploads || uploads.length === 0) {
+        grid.innerHTML = '';
+        document.getElementById('empty').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('empty').classList.add('hidden');
+
+      grid.innerHTML = uploads.map(upload => `
+        <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 border border-gray-800 shadow-2xl">
+          <img src="${upload.image_url}" alt="Upload" class="w-full h-64 object-cover rounded-2xl mb-6">
+          <div class="space-y-4 text-lg">
+            <p class="font-medium line-clamp-3">${upload.description || 'No description'}</p>
+            <p><strong>Budget:</strong> ₦${upload.budget?.toLocaleString()}</p>
+            <p><strong>Total:</strong> ₦${upload.total_amount?.toLocaleString()}</p>
+            <p><strong>Delivery:</strong> ${upload.delivery_type === 'express' ? 'Express' : 'Standard'}</p>
+            <p><strong>Ghost:</strong> ${upload.is_ghost ? 'Yes' : 'No'}</p>
+            <p><strong>Submitted:</strong> ${new Date(upload.created_at).toLocaleString()}</p>
+          </div>
+          <div class="mt-8 grid grid-cols-3 gap-4">
+            <button onclick="approveUpload('${upload.id}')" class="py-4 bg-green-600 hover:bg-green-700 rounded-2xl font-bold">
+              Approve
+            </button>
+            <button onclick="rejectUpload('${upload.id}')" class="py-4 bg-red-600 hover:bg-red-700 rounded-2xl font-bold">
+              Reject
+            </button>
+            <button onclick="openWarningModal('${upload.user_id}')" class="py-4 bg-yellow-600 hover:bg-yellow-700 rounded-2xl font-bold">
+              ⚠️ Warn
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function approveUpload(id) {
+      if (!confirm('Approve this upload? It will be visible to runners.')) return;
+
+      const { error } = await supabase
+        .from('User_uploads')
+        .update({ status: 'approved' })
+        .eq('id', id);
+
+      if (error) alert('Error approving: ' + error.message);
+      else {
+        alert('Upload approved!');
+        loadUploads();
+      }
+    }
+
+    async function rejectUpload(id) {
+      if (!confirm('Reject this upload? It will be hidden.')) return;
+
+      const { error } = await supabase
+        .from('User_uploads')
+        .update({ status: 'rejected' })
+        .eq('id', id);
+
+      if (error) alert('Error rejecting: ' + error.message);
+      else {
+        alert('Upload rejected!');
+        loadUploads();
+      }
+    }
+
+    let warningUserId = null;
+    window.openWarningModal = (userId) => {
+      warningUserId = userId;
+      document.getElementById('warning-modal').classList.remove('hidden');
+    };
+    window.closeWarningModal = () => {
+      document.getElementById('warning-modal').classList.add('hidden');
+    };
+
+    async function sendWarning() {
+      if (!warningUserId) return;
+
+      const title = document.getElementById('warning-title').value.trim();
+      const message = document.getElementById('warning-message').value.trim();
+
+      if (!title || !message) return alert('Title and message required for warning.');
+
+      const { error } = await supabase.from('updates').insert({
+        title,
+        message,
+        type: 'private',
+        target_user_id: warningUserId
+      });
+
+      if (error) alert('Error sending warning: ' + error.message);
+      else {
+        alert('Warning sent to user!');
+        closeWarningModal();
+      }
+    }
+
+    // Real-time for new uploads
+    function subscribeToUploads() {
+      supabase
+        .channel('pending-uploads')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'User_uploads', filter: 'status=eq.pending' }, () => {
+          loadUploads();
+        })
+        .subscribe();
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', async () => {
+      await checkAuth();
+      loadUploads();
+      subscribeToUploads();
+    });
+  </script>
+</body>
+</html>
