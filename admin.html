@@ -51,11 +51,16 @@
   </aside>
   <div id="overlay" class="fixed inset-0 bg-black/70 z-30 hidden" onclick="closeMenu()"></div>
 
-  <!-- Notification Panel -->
-  <div id="notification-panel" class="fixed top-24 right-8 w-96 bg-black/95 backdrop-blur border border-orange-900/50 rounded-3xl p-6 transform translate-x-full transition-transform duration-300 z-40 max-h-[600px] overflow-y-auto hidden">
-    <h3 class="text-2xl font-black mb-6">Notifications</h3>
-    <div class="space-y-4" id="notifications-list">
-      <p class="text-gray-500 text-center py-8">Loading notifications...</p>
+  <!-- Full Page Notifications (hidden by default) -->
+  <div id="notifications-page" class="fixed inset-0 bg-black z-50 hidden flex flex-col">
+    <div class="border-b border-orange-900/50 bg-black/80 backdrop-blur py-6 px-8 flex justify-between items-center">
+      <h2 class="text-3xl font-black">Notifications</h2>
+      <button onclick="closeNotificationsPage()" class="text-4xl hover:text-orange-500 transition">✕</button>
+    </div>
+    <div class="flex-1 overflow-y-auto p-8">
+      <div class="max-w-4xl mx-auto space-y-6" id="full-notifications-list">
+        <p class="text-gray-500 text-center py-12 text-xl">Loading notifications...</p>
+      </div>
     </div>
   </div>
 
@@ -97,8 +102,8 @@
       </div>
     </div>
 
-    <!-- Rest of dashboard (activity, users, runners, pending) - keep your original or placeholder -->
-    <!-- ... -->
+    <!-- Rest of dashboard content -->
+    <!-- (Your existing activity, users, runners, pending sections - keep as is) -->
 
   </div>
 
@@ -113,14 +118,16 @@
       document.getElementById('overlay').classList.add('hidden');
     }
 
-    // Notification bell
+    // Notification bell - opens full page
     document.getElementById('notification-bell').onclick = () => {
-      const panel = document.getElementById('notification-panel');
-      panel.classList.toggle('hidden');
-      panel.classList.toggle('translate-x-full');
-      loadNotifications();
-      clearNotificationCount();
+      document.getElementById('notifications-page').classList.remove('hidden');
+      loadFullNotifications();
+      clearNotificationCount();  // Clear badge when opened
     };
+
+    function closeNotificationsPage() {
+      document.getElementById('notifications-page').classList.add('hidden');
+    }
 
     const supabase = window.supabase.createClient(
       'https://lfjvnyeirxdvwxvzyocc.supabase.co',
@@ -135,34 +142,31 @@
       badge.classList.add('hidden');
     }
 
-    async function loadNotifications() {
+    async function loadFullNotifications() {
       const { data: notifications } = await supabase
         .from('updates')
         .select('title, message, type, created_at')
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .order('created_at', { ascending: false });
 
-      const unreadCount = notifications?.filter(n => new Date(n.created_at) > lastSeenNotificationTime).length || 0;
-
-      const badge = document.getElementById('notification-badge');
-      if (unreadCount > 0) {
-        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-        badge.classList.remove('hidden');
-      } else {
-        badge.classList.add('hidden');
+      const list = document.getElementById('full-notifications-list');
+      if (!notifications || notifications.length === 0) {
+        list.innerHTML = '<p class="text-gray-500 text-center py-12 text-xl">No notifications yet</p>';
+        return;
       }
 
-      document.getElementById('notifications-list').innerHTML = notifications?.length ? notifications.map(n => {
+      list.innerHTML = notifications.map(n => {
         const isUnread = new Date(n.created_at) > lastSeenNotificationTime;
         return `
-          <div class="p-4 bg-black/60 rounded-xl border ${isUnread ? 'border-orange-600' : 'border-gray-800'}">
-            <p class="font-bold capitalize">${n.type} Update</p>
-            <p class="font-semibold">${n.title || 'Update'}</p>
-            <p class="text-sm text-gray-300 mt-1">${n.message}</p>
-            <p class="text-xs text-gray-500 mt-2">${new Date(n.created_at).toLocaleString()}</p>
+          <div class="bg-gray-900/80 backdrop-blur rounded-3xl p-8 border ${isUnread ? 'border-orange-600' : 'border-gray-800'}">
+            <div class="flex justify-between items-start mb-4">
+              <p class="text-sm text-gray-400 capitalize">${n.type} Update</p>
+              <p class="text-sm text-gray-500">${new Date(n.created_at).toLocaleString()}</p>
+            </div>
+            <h3 class="text-2xl font-bold mb-3">${n.title || 'Platform Update'}</h3>
+            <p class="text-lg text-gray-300">${n.message}</p>
           </div>
         `;
-      }).join('') : '<p class="text-gray-500 text-center py-8">No notifications</p>';
+      }).join('');
     }
 
     function formatNumber(num) {
@@ -185,7 +189,16 @@
       const { count: pendingCount } = await supabase.from('User_uploads').select('*', { count: 'exact', head: true }).eq('status', 'pending');
       document.getElementById('pending-uploads').textContent = formatNumber(pendingCount || 0);
 
-      loadNotifications();
+      // Update badge
+      const { data: notifications } = await supabase.from('updates').select('created_at').order('created_at', { ascending: false });
+      const unreadCount = notifications?.filter(n => new Date(n.created_at) > lastSeenNotificationTime).length || 0;
+      const badge = document.getElementById('notification-badge');
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
     }
 
     // Stars
@@ -201,7 +214,7 @@
 
     load();
     setInterval(load, 15000);
-    supabase.channel('updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'updates' }, loadNotifications).subscribe();
+    supabase.channel('updates').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'updates' }, load).subscribe();
   </script>
 </body>
 </html>
